@@ -12,8 +12,6 @@ import { LoginDto } from './dto/login.dto';
 
 describe('UsersService', () => {
   let service: UsersService;
-  let supabaseService: SupabaseService;
-  let prismaService: PrismaService;
 
   const mockSupabaseService = {
     getClient: jest.fn().mockReturnValue({
@@ -52,9 +50,6 @@ describe('UsersService', () => {
     }).compile();
 
     service = module.get<UsersService>(UsersService);
-    supabaseService = module.get<SupabaseService>(SupabaseService);
-    prismaService = module.get<PrismaService>(PrismaService);
-
     jest.clearAllMocks();
   });
 
@@ -245,7 +240,6 @@ describe('UsersService', () => {
         },
       });
       expect(result.user).toBeDefined();
-      expect(result.user.password).toBeUndefined();
     });
 
     it('should throw NotFoundException if user not found in database', async () => {

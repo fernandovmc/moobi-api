@@ -7,7 +7,6 @@ import { UpdateAccountDto } from './dto/update-account.dto';
 
 describe('AccountsService', () => {
   let service: AccountsService;
-  let prismaService: PrismaService;
 
   const mockPrismaService = {
     account: {
@@ -34,8 +33,6 @@ describe('AccountsService', () => {
     }).compile();
 
     service = module.get<AccountsService>(AccountsService);
-    prismaService = module.get<PrismaService>(PrismaService);
-
     jest.clearAllMocks();
   });
 
@@ -138,7 +135,6 @@ describe('AccountsService', () => {
       name: 'New Account',
       type: 'checking',
       balance: 500,
-      color: '#FF5733',
     };
 
     it('should create a new account', async () => {
@@ -170,7 +166,6 @@ describe('AccountsService', () => {
     const updateAccountDto: UpdateAccountDto = {
       name: 'Updated Account',
       balance: 1500,
-      color: '#33FF57',
     };
 
     it('should update an existing account', async () => {

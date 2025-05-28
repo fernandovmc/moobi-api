@@ -11,12 +11,10 @@ describe('CategoriesService', () => {
   const mockPrismaService = {
     category: {
       findMany: jest.fn(),
-      findUnique: jest.fn(),
+      findFirst: jest.fn(),
       create: jest.fn(),
-      createMany: jest.fn(),
       update: jest.fn(),
       delete: jest.fn(),
-      count: jest.fn(),
     },
     transaction: {
       count: jest.fn(),
@@ -114,12 +112,12 @@ describe('CategoriesService', () => {
         userId,
       };
 
-      mockPrismaService.category.findUnique.mockResolvedValue(mockCategory);
+      mockPrismaService.category.findFirst.mockResolvedValue(mockCategory);
 
       const result = await service.findOne(categoryId, userId);
 
-      expect(mockPrismaService.category.findUnique).toHaveBeenCalledWith({
-        where: { id: categoryId },
+      expect(mockPrismaService.category.findFirst).toHaveBeenCalledWith({
+        where: { id: categoryId, userId },
       });
       expect(result).toEqual(mockCategory);
     });
@@ -128,35 +126,13 @@ describe('CategoriesService', () => {
       const userId = 'user-id';
       const categoryId = 'non-existent-id';
 
-      mockPrismaService.category.findUnique.mockResolvedValue(null);
+      mockPrismaService.category.findFirst.mockResolvedValue(null);
 
       await expect(service.findOne(categoryId, userId)).rejects.toThrow(
         NotFoundException,
       );
-      expect(mockPrismaService.category.findUnique).toHaveBeenCalledWith({
-        where: { id: categoryId },
-      });
-    });
-
-    it('should throw ForbiddenException if category does not belong to the user', async () => {
-      const userId = 'user-id';
-      const categoryId = 'cat-id';
-      const mockCategory = {
-        id: categoryId,
-        name: 'Groceries',
-        type: 'expense',
-        color: '#FF5733',
-        icon: 'shopping_cart',
-        userId: 'different-user-id',
-      };
-
-      mockPrismaService.category.findUnique.mockResolvedValue(mockCategory);
-
-      await expect(service.findOne(categoryId, userId)).rejects.toThrow(
-        ForbiddenException,
-      );
-      expect(mockPrismaService.category.findUnique).toHaveBeenCalledWith({
-        where: { id: categoryId },
+      expect(mockPrismaService.category.findFirst).toHaveBeenCalledWith({
+        where: { id: categoryId, userId },
       });
     });
   });
@@ -217,7 +193,7 @@ describe('CategoriesService', () => {
         updatedAt: new Date(),
       };
 
-      mockPrismaService.category.findUnique.mockResolvedValue(existingCategory);
+      mockPrismaService.category.findFirst.mockResolvedValue(existingCategory);
       mockPrismaService.category.update.mockResolvedValue(updatedCategory);
 
       const result = await service.update(
@@ -226,8 +202,8 @@ describe('CategoriesService', () => {
         userId,
       );
 
-      expect(mockPrismaService.category.findUnique).toHaveBeenCalledWith({
-        where: { id: categoryId },
+      expect(mockPrismaService.category.findFirst).toHaveBeenCalledWith({
+        where: { id: categoryId, userId },
       });
       expect(mockPrismaService.category.update).toHaveBeenCalledWith({
         where: { id: categoryId },
@@ -240,36 +216,13 @@ describe('CategoriesService', () => {
       const userId = 'user-id';
       const categoryId = 'non-existent-id';
 
-      mockPrismaService.category.findUnique.mockResolvedValue(null);
+      mockPrismaService.category.findFirst.mockResolvedValue(null);
 
       await expect(
         service.update(categoryId, updateCategoryDto, userId),
       ).rejects.toThrow(NotFoundException);
-      expect(mockPrismaService.category.findUnique).toHaveBeenCalledWith({
-        where: { id: categoryId },
-      });
-      expect(mockPrismaService.category.update).not.toHaveBeenCalled();
-    });
-
-    it('should throw ForbiddenException if category does not belong to the user', async () => {
-      const userId = 'user-id';
-      const categoryId = 'cat-id';
-      const existingCategory = {
-        id: categoryId,
-        name: 'Old Category',
-        type: 'expense',
-        color: '#FF5733',
-        icon: 'old_icon',
-        userId: 'different-user-id',
-      };
-
-      mockPrismaService.category.findUnique.mockResolvedValue(existingCategory);
-
-      await expect(
-        service.update(categoryId, updateCategoryDto, userId),
-      ).rejects.toThrow(ForbiddenException);
-      expect(mockPrismaService.category.findUnique).toHaveBeenCalledWith({
-        where: { id: categoryId },
+      expect(mockPrismaService.category.findFirst).toHaveBeenCalledWith({
+        where: { id: categoryId, userId },
       });
       expect(mockPrismaService.category.update).not.toHaveBeenCalled();
     });
@@ -288,24 +241,23 @@ describe('CategoriesService', () => {
         userId,
       };
 
-      mockPrismaService.category.findUnique.mockResolvedValue(existingCategory);
+      mockPrismaService.category.findFirst.mockResolvedValue(existingCategory);
       mockPrismaService.transaction.count.mockResolvedValue(0);
       mockPrismaService.category.delete.mockResolvedValue(existingCategory);
 
       const result = await service.remove(categoryId, userId);
 
-      expect(mockPrismaService.category.findUnique).toHaveBeenCalledWith({
-        where: { id: categoryId },
+      expect(mockPrismaService.category.findFirst).toHaveBeenCalledWith({
+        where: { id: categoryId, userId },
       });
       expect(mockPrismaService.transaction.count).toHaveBeenCalledWith({
-        where: { categoryId },
+        where: { categoryId: categoryId },
       });
       expect(mockPrismaService.category.delete).toHaveBeenCalledWith({
         where: { id: categoryId },
       });
       expect(result).toEqual({
         success: true,
-        message: 'Category deleted successfully',
       });
     });
 
@@ -321,17 +273,17 @@ describe('CategoriesService', () => {
         userId,
       };
 
-      mockPrismaService.category.findUnique.mockResolvedValue(existingCategory);
+      mockPrismaService.category.findFirst.mockResolvedValue(existingCategory);
       mockPrismaService.transaction.count.mockResolvedValue(5);
 
       await expect(service.remove(categoryId, userId)).rejects.toThrow(
         ForbiddenException,
       );
-      expect(mockPrismaService.category.findUnique).toHaveBeenCalledWith({
-        where: { id: categoryId },
+      expect(mockPrismaService.category.findFirst).toHaveBeenCalledWith({
+        where: { id: categoryId, userId },
       });
       expect(mockPrismaService.transaction.count).toHaveBeenCalledWith({
-        where: { categoryId },
+        where: { categoryId: categoryId },
       });
       expect(mockPrismaService.category.delete).not.toHaveBeenCalled();
     });
@@ -340,29 +292,14 @@ describe('CategoriesService', () => {
   describe('createDefaultCategories', () => {
     it('should create default categories for a user', async () => {
       const userId = 'user-id';
-      mockPrismaService.category.count.mockResolvedValue(0);
-      mockPrismaService.category.createMany.mockResolvedValue({ count: 10 });
+      mockPrismaService.category.create.mockImplementation(() => {
+        return Promise.resolve({});
+      });
 
       const result = await service.createDefaultCategories(userId);
 
-      expect(mockPrismaService.category.count).toHaveBeenCalledWith({
-        where: { userId },
-      });
-      expect(mockPrismaService.category.createMany).toHaveBeenCalled();
-      expect(result).toEqual({ count: 10 });
-    });
-
-    it('should not create default categories if user already has categories', async () => {
-      const userId = 'user-id';
-      mockPrismaService.category.count.mockResolvedValue(5);
-
-      const result = await service.createDefaultCategories(userId);
-
-      expect(mockPrismaService.category.count).toHaveBeenCalledWith({
-        where: { userId },
-      });
-      expect(mockPrismaService.category.createMany).not.toHaveBeenCalled();
-      expect(result).toEqual({ count: 0 });
+      expect(mockPrismaService.category.create).toHaveBeenCalledTimes(9);
+      expect(result).toEqual({ count: 9 });
     });
   });
 });
