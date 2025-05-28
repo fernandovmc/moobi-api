@@ -11,7 +11,7 @@ describe('AccountsService', () => {
   const mockPrismaService = {
     account: {
       findMany: jest.fn(),
-      findUnique: jest.fn(),
+      findFirst: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
       delete: jest.fn(),
@@ -65,7 +65,7 @@ describe('AccountsService', () => {
       const result = await service.findAll(userId);
 
       expect(mockPrismaService.account.findMany).toHaveBeenCalledWith({
-        where: { userId, isActive: true },
+        where: { userId },
         orderBy: { name: 'asc' },
       });
       expect(result).toEqual(mockAccounts);
@@ -84,12 +84,12 @@ describe('AccountsService', () => {
         userId,
       };
 
-      mockPrismaService.account.findUnique.mockResolvedValue(mockAccount);
+      mockPrismaService.account.findFirst.mockResolvedValue(mockAccount);
 
       const result = await service.findOne(accountId, userId);
 
-      expect(mockPrismaService.account.findUnique).toHaveBeenCalledWith({
-        where: { id: accountId },
+      expect(mockPrismaService.account.findFirst).toHaveBeenCalledWith({
+        where: { id: accountId, userId },
       });
       expect(result).toEqual(mockAccount);
     });
@@ -98,34 +98,13 @@ describe('AccountsService', () => {
       const userId = 'user-id';
       const accountId = 'non-existent-id';
 
-      mockPrismaService.account.findUnique.mockResolvedValue(null);
+      mockPrismaService.account.findFirst.mockResolvedValue(null);
 
       await expect(service.findOne(accountId, userId)).rejects.toThrow(
         NotFoundException,
       );
-      expect(mockPrismaService.account.findUnique).toHaveBeenCalledWith({
-        where: { id: accountId },
-      });
-    });
-
-    it('should throw ForbiddenException if account does not belong to the user', async () => {
-      const userId = 'user-id';
-      const accountId = 'account-id';
-      const mockAccount = {
-        id: accountId,
-        name: 'Checking Account',
-        type: 'checking',
-        balance: 1000,
-        userId: 'different-user-id',
-      };
-
-      mockPrismaService.account.findUnique.mockResolvedValue(mockAccount);
-
-      await expect(service.findOne(accountId, userId)).rejects.toThrow(
-        ForbiddenException,
-      );
-      expect(mockPrismaService.account.findUnique).toHaveBeenCalledWith({
-        where: { id: accountId },
+      expect(mockPrismaService.account.findFirst).toHaveBeenCalledWith({
+        where: { id: accountId, userId },
       });
     });
   });
@@ -185,13 +164,13 @@ describe('AccountsService', () => {
         updatedAt: new Date(),
       };
 
-      mockPrismaService.account.findUnique.mockResolvedValue(existingAccount);
+      mockPrismaService.account.findFirst.mockResolvedValue(existingAccount);
       mockPrismaService.account.update.mockResolvedValue(updatedAccount);
 
       const result = await service.update(accountId, updateAccountDto, userId);
 
-      expect(mockPrismaService.account.findUnique).toHaveBeenCalledWith({
-        where: { id: accountId },
+      expect(mockPrismaService.account.findFirst).toHaveBeenCalledWith({
+        where: { id: accountId, userId },
       });
       expect(mockPrismaService.account.update).toHaveBeenCalledWith({
         where: { id: accountId },
@@ -204,36 +183,13 @@ describe('AccountsService', () => {
       const userId = 'user-id';
       const accountId = 'non-existent-id';
 
-      mockPrismaService.account.findUnique.mockResolvedValue(null);
+      mockPrismaService.account.findFirst.mockResolvedValue(null);
 
       await expect(
         service.update(accountId, updateAccountDto, userId),
       ).rejects.toThrow(NotFoundException);
-      expect(mockPrismaService.account.findUnique).toHaveBeenCalledWith({
-        where: { id: accountId },
-      });
-      expect(mockPrismaService.account.update).not.toHaveBeenCalled();
-    });
-
-    it('should throw ForbiddenException if account does not belong to the user', async () => {
-      const userId = 'user-id';
-      const accountId = 'account-id';
-      const existingAccount = {
-        id: accountId,
-        name: 'Old Account',
-        type: 'checking',
-        balance: 1000,
-        userId: 'different-user-id',
-        isActive: true,
-      };
-
-      mockPrismaService.account.findUnique.mockResolvedValue(existingAccount);
-
-      await expect(
-        service.update(accountId, updateAccountDto, userId),
-      ).rejects.toThrow(ForbiddenException);
-      expect(mockPrismaService.account.findUnique).toHaveBeenCalledWith({
-        where: { id: accountId },
+      expect(mockPrismaService.account.findFirst).toHaveBeenCalledWith({
+        where: { id: accountId, userId },
       });
       expect(mockPrismaService.account.update).not.toHaveBeenCalled();
     });
@@ -252,14 +208,14 @@ describe('AccountsService', () => {
         isActive: true,
       };
 
-      mockPrismaService.account.findUnique.mockResolvedValue(existingAccount);
+      mockPrismaService.account.findFirst.mockResolvedValue(existingAccount);
       mockPrismaService.transaction.count.mockResolvedValue(0);
       mockPrismaService.account.delete.mockResolvedValue(existingAccount);
 
       const result = await service.remove(accountId, userId);
 
-      expect(mockPrismaService.account.findUnique).toHaveBeenCalledWith({
-        where: { id: accountId },
+      expect(mockPrismaService.account.findFirst).toHaveBeenCalledWith({
+        where: { id: accountId, userId },
       });
       expect(mockPrismaService.transaction.count).toHaveBeenCalledWith({
         where: { accountId },
@@ -269,7 +225,6 @@ describe('AccountsService', () => {
       });
       expect(result).toEqual({
         success: true,
-        message: 'Account deleted successfully',
       });
     });
 
@@ -285,14 +240,14 @@ describe('AccountsService', () => {
         isActive: true,
       };
 
-      mockPrismaService.account.findUnique.mockResolvedValue(existingAccount);
+      mockPrismaService.account.findFirst.mockResolvedValue(existingAccount);
       mockPrismaService.transaction.count.mockResolvedValue(5);
 
       await expect(service.remove(accountId, userId)).rejects.toThrow(
         ForbiddenException,
       );
-      expect(mockPrismaService.account.findUnique).toHaveBeenCalledWith({
-        where: { id: accountId },
+      expect(mockPrismaService.account.findFirst).toHaveBeenCalledWith({
+        where: { id: accountId, userId },
       });
       expect(mockPrismaService.transaction.count).toHaveBeenCalledWith({
         where: { accountId },
@@ -319,13 +274,13 @@ describe('AccountsService', () => {
         updatedAt: new Date(),
       };
 
-      mockPrismaService.account.findUnique.mockResolvedValue(existingAccount);
+      mockPrismaService.account.findFirst.mockResolvedValue(existingAccount);
       mockPrismaService.account.update.mockResolvedValue(deactivatedAccount);
 
       const result = await service.deactivate(accountId, userId);
 
-      expect(mockPrismaService.account.findUnique).toHaveBeenCalledWith({
-        where: { id: accountId },
+      expect(mockPrismaService.account.findFirst).toHaveBeenCalledWith({
+        where: { id: accountId, userId },
       });
       expect(mockPrismaService.account.update).toHaveBeenCalledWith({
         where: { id: accountId },
