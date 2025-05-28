@@ -15,7 +15,7 @@ import { UsersService } from './users.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { Request } from 'express';
+import { AuthRequest } from './interfaces/auth-request.interface';
 import { AuthGuard } from './guards/auth.guard';
 
 @Controller('auth')
@@ -49,7 +49,7 @@ export class UsersController {
 
   @Get('me')
   @UseGuards(AuthGuard)
-  async getCurrentUser(@Req() request: Request) {
+  async getCurrentUser(@Req() request: AuthRequest) {
     const token = this.extractTokenFromHeader(request);
     if (!token) {
       return { user: null };
@@ -74,10 +74,13 @@ export class UsersController {
 
   @Put('users/:id')
   @UseGuards(AuthGuard)
-  async updateUser(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return { 
+  async updateUser(
+    @Param('id') id: string,
+    @Body() updateUserDto: UpdateUserDto,
+  ) {
+    return {
       user: await this.usersService.updateUser(id, updateUserDto),
-      message: 'User updated successfully'
+      message: 'User updated successfully',
     };
   }
 
@@ -90,14 +93,14 @@ export class UsersController {
 
   @Get('protected')
   @UseGuards(AuthGuard)
-  protectedRoute(@Req() request: Request) {
+  protectedRoute(@Req() request: AuthRequest) {
     return {
       message: 'Esta é uma rota protegida',
-      user: request['user'],
+      user: request.user,
     };
   }
 
-  private extractTokenFromHeader(request: Request): string | undefined {
+  private extractTokenFromHeader(request: AuthRequest): string | undefined {
     const [type, token] = request.headers.authorization?.split(' ') ?? [];
     return type === 'Bearer' ? token : undefined;
   }

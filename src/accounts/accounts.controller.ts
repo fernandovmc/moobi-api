@@ -15,7 +15,7 @@ import { AccountsService } from './accounts.service';
 import { CreateAccountDto } from './dto/create-account.dto';
 import { UpdateAccountDto } from './dto/update-account.dto';
 import { AuthGuard } from '../users/guards/auth.guard';
-import { Request } from 'express';
+import { AuthRequest } from '../users/interfaces/auth-request.interface';
 
 @Controller('accounts')
 @UseGuards(AuthGuard)
@@ -23,23 +23,35 @@ export class AccountsController {
   constructor(private accountsService: AccountsService) {}
 
   @Get()
-  async findAll(@Req() request: Request) {
-    const userId = request['user'].id;
+  async findAll(@Req() request: AuthRequest) {
+    const userId = request.user?.id;
+    if (!userId) {
+      throw new Error('User not authenticated');
+    }
     return { accounts: await this.accountsService.findAll(userId) };
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string, @Req() request: Request) {
-    const userId = request['user'].id;
+  async findOne(@Param('id') id: string, @Req() request: AuthRequest) {
+    const userId = request.user?.id;
+    if (!userId) {
+      throw new Error('User not authenticated');
+    }
     return { account: await this.accountsService.findOne(id, userId) };
   }
 
   @Post()
-  async create(@Body() createAccountDto: CreateAccountDto, @Req() request: Request) {
-    const userId = request['user'].id;
-    return { 
+  async create(
+    @Body() createAccountDto: CreateAccountDto,
+    @Req() request: AuthRequest,
+  ) {
+    const userId = request.user?.id;
+    if (!userId) {
+      throw new Error('User not authenticated');
+    }
+    return {
       account: await this.accountsService.create(createAccountDto, userId),
-      message: 'Account created successfully'
+      message: 'Account created successfully',
     };
   }
 
@@ -47,28 +59,37 @@ export class AccountsController {
   async update(
     @Param('id') id: string,
     @Body() updateAccountDto: UpdateAccountDto,
-    @Req() request: Request,
+    @Req() request: AuthRequest,
   ) {
-    const userId = request['user'].id;
-    return { 
+    const userId = request.user?.id;
+    if (!userId) {
+      throw new Error('User not authenticated');
+    }
+    return {
       account: await this.accountsService.update(id, updateAccountDto, userId),
-      message: 'Account updated successfully'
+      message: 'Account updated successfully',
     };
   }
 
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
-  async remove(@Param('id') id: string, @Req() request: Request) {
-    const userId = request['user'].id;
+  async remove(@Param('id') id: string, @Req() request: AuthRequest) {
+    const userId = request.user?.id;
+    if (!userId) {
+      throw new Error('User not authenticated');
+    }
     return this.accountsService.remove(id, userId);
   }
 
   @Put(':id/deactivate')
-  async deactivate(@Param('id') id: string, @Req() request: Request) {
-    const userId = request['user'].id;
-    return { 
+  async deactivate(@Param('id') id: string, @Req() request: AuthRequest) {
+    const userId = request.user?.id;
+    if (!userId) {
+      throw new Error('User not authenticated');
+    }
+    return {
       account: await this.accountsService.deactivate(id, userId),
-      message: 'Account deactivated successfully'
+      message: 'Account deactivated successfully',
     };
   }
-} 
+}

@@ -1,4 +1,10 @@
-import { IsOptional, IsString, IsIn, IsNumber, IsBoolean } from 'class-validator';
+import {
+  IsOptional,
+  IsString,
+  IsIn,
+  IsNumber,
+  IsBoolean,
+} from 'class-validator';
 import { Transform } from 'class-transformer';
 
 export class UpdateAccountDto {
@@ -19,4 +25,4 @@ export class UpdateAccountDto {
   @IsBoolean()
   @IsOptional()
   isActive?: boolean;
-} 
+}

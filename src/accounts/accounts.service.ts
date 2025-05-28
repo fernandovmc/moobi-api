@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { Account } from '../../generated/prisma';
 import { CreateAccountDto } from './dto/create-account.dto';
@@ -27,7 +31,10 @@ export class AccountsService {
     return account;
   }
 
-  async create(createAccountDto: CreateAccountDto, userId: string): Promise<Account> {
+  async create(
+    createAccountDto: CreateAccountDto,
+    userId: string,
+  ): Promise<Account> {
     return this.prismaService.account.create({
       data: {
         ...createAccountDto,
@@ -36,7 +43,11 @@ export class AccountsService {
     });
   }
 
-  async update(id: string, updateAccountDto: UpdateAccountDto, userId: string): Promise<Account> {
+  async update(
+    id: string,
+    updateAccountDto: UpdateAccountDto,
+    userId: string,
+  ): Promise<Account> {
     // Verificar se a conta existe e pertence ao usuário
     await this.findOne(id, userId);
 
@@ -77,4 +88,4 @@ export class AccountsService {
       data: { isActive: false },
     });
   }
-} 
+}

@@ -1,4 +1,9 @@
-import { Injectable, UnauthorizedException, ConflictException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 import { SupabaseService } from '../supabase/supabase.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuthResponse } from '@supabase/supabase-js';
@@ -41,7 +46,7 @@ export class UsersService {
     }
 
     // Criar usuário no Prisma
-    if (data.user) {
+    if (data.user && data.user.email) {
       await this.prismaService.user.create({
         data: {
           id: data.user.id,
@@ -83,7 +88,7 @@ export class UsersService {
 
   async getCurrentUser(token: string) {
     const supabaseData = await this.supabaseService.validateUser(token);
-    
+
     if (supabaseData.user) {
       const user = await this.prismaService.user.findUnique({
         where: { id: supabaseData.user.id },

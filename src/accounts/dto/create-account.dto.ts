@@ -1,4 +1,10 @@
-import { IsNotEmpty, IsString, IsIn, IsNumber, IsOptional } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsString,
+  IsIn,
+  IsNumber,
+  IsOptional,
+} from 'class-validator';
 import { Transform } from 'class-transformer';
 
 export class CreateAccountDto {
@@ -15,4 +21,4 @@ export class CreateAccountDto {
   @IsOptional()
   @Transform(({ value }) => parseFloat(value))
   balance?: number;
-} 
+}
