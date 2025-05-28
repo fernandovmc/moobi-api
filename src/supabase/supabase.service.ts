@@ -1,6 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { UserResponse } from '../users/interfaces/user.interface';
 
 @Injectable()
 export class SupabaseService {
@@ -24,9 +25,17 @@ export class SupabaseService {
   }
 
   // Método para validar token do usuário
-  async validateUser(token: string) {
-    const { data: user, error } = await this.supabase.auth.getUser(token);
-    if (error) throw error;
-    return user;
+  async validateUser(token: string): Promise<UserResponse> {
+    try {
+      const { data, error } = await this.supabase.auth.getUser(token);
+
+      if (error) {
+        throw new UnauthorizedException('Token inválido ou expirado');
+      }
+
+      return data;
+    } catch (error) {
+      throw new UnauthorizedException('Falha na autenticação');
+    }
   }
 }
