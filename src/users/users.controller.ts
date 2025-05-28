@@ -3,6 +3,9 @@ import {
   Post,
   Body,
   Get,
+  Put,
+  Delete,
+  Param,
   Req,
   HttpCode,
   HttpStatus,
@@ -11,6 +14,7 @@ import {
 import { UsersService } from './users.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 import { Request } from 'express';
 import { AuthGuard } from './guards/auth.guard';
 
@@ -44,13 +48,44 @@ export class UsersController {
   }
 
   @Get('me')
+  @UseGuards(AuthGuard)
   async getCurrentUser(@Req() request: Request) {
     const token = this.extractTokenFromHeader(request);
     if (!token) {
       return { user: null };
     }
     const userData = await this.usersService.getCurrentUser(token);
-    return { user: userData.user };
+    return userData;
+  }
+
+  // Novos endpoints para gerenciamento de usuários
+
+  @Get('users')
+  @UseGuards(AuthGuard)
+  async getAllUsers() {
+    return { users: await this.usersService.getAllUsers() };
+  }
+
+  @Get('users/:id')
+  @UseGuards(AuthGuard)
+  async getUserById(@Param('id') id: string) {
+    return { user: await this.usersService.getUserById(id) };
+  }
+
+  @Put('users/:id')
+  @UseGuards(AuthGuard)
+  async updateUser(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
+    return { 
+      user: await this.usersService.updateUser(id, updateUserDto),
+      message: 'User updated successfully'
+    };
+  }
+
+  @Delete('users/:id')
+  @UseGuards(AuthGuard)
+  @HttpCode(HttpStatus.OK)
+  async deleteUser(@Param('id') id: string) {
+    return this.usersService.deleteUser(id);
   }
 
   @Get('protected')

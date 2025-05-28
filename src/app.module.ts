@@ -5,9 +5,17 @@ import { ConfigModule } from './config/config.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { SupabaseService } from './supabase/supabase.service';
 import { UsersModule } from './users/users.module';
+import { AccountsModule } from './accounts/accounts.module';
+import { CategoriesModule } from './categories/categories.module';
 
 @Module({
-  imports: [ConfigModule, PrismaModule, UsersModule],
+  imports: [
+    ConfigModule,
+    PrismaModule,
+    UsersModule,
+    AccountsModule,
+    CategoriesModule,
+  ],
   controllers: [AppController],
   providers: [AppService, SupabaseService],
 })
